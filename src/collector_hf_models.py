@@ -17,6 +17,7 @@ class HFModelsCollector(BaseCollector):
         for model in models:
             model_id = model.get("modelId", model.get("id", ""))
             items.append({
+                "title": model_id,
                 "name": model_id,
                 "url": hf_url("/" + model_id),
                 "description": (model.get("description") or "")[:300],
@@ -25,6 +26,7 @@ class HFModelsCollector(BaseCollector):
                 "downloads": model.get("downloads", 0),
                 "likes": model.get("likes", 0),
                 "source": "Hugging Face Models",
+                "type": "model",
             })
 
         return items[:15]

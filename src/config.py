@@ -1,3 +1,5 @@
+from datetime import datetime
+
 DATA_DIR = "data"
 OUTPUT_DIR = "output"
 
@@ -22,3 +24,6 @@ SITE_CONFIG = {
     "description": "Daily aggregation of AI news, papers, open-source models, and trending GitHub repos.",
     "language": "zh-CN",
 }
+
+def today_str() -> str:
+    return datetime.utcnow().strftime("%Y-%m-%d")

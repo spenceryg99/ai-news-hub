@@ -1,7 +1,7 @@
 import json
 import os
 from datetime import datetime
-from src.config import DATA_DIR, COLLECTORS
+from src.config import DATA_DIR, COLLECTORS, today_str
 from src.collector_hf_papers import HFPapersCollector
 from src.collector_arxiv import ArxivCollector
 from src.collector_github import GitHubTrendingCollector
@@ -23,6 +23,14 @@ def get_collector(name: str):
     return None
 
 
+def list_dates() -> list[str]:
+    if not os.path.exists(DATA_DIR):
+        return []
+    dates = [d for d in os.listdir(DATA_DIR) if os.path.isdir(os.path.join(DATA_DIR, d)) and "-" in d]
+    dates.sort(reverse=True)
+    return dates
+
+
 def run_all():
     os.makedirs(DATA_DIR, exist_ok=True)
 
@@ -38,6 +46,7 @@ def run_all():
 
     manifest = {
         "updated_at": datetime.utcnow().isoformat(),
+        "date": today_str(),
         "sources": list(COLLECTORS.keys()),
         "total_items": sum(len(v) for v in all_data.values()),
     }
@@ -50,16 +59,23 @@ def run_all():
     return all_data
 
 
-def load_all() -> dict:
+def load_by_date(date: str) -> dict:
     data = {}
+    base = os.path.join(DATA_DIR, date)
+    if not os.path.exists(base):
+        return data
     for name in COLLECTORS:
-        path = os.path.join(DATA_DIR, f"{name}.json")
+        path = os.path.join(base, f"{name}.json")
         if os.path.exists(path):
             with open(path, "r", encoding="utf-8") as f:
                 data[name] = json.load(f).get("items", [])
         else:
             data[name] = []
     return data
+
+
+def load_all() -> dict:
+    return load_by_date(today_str())
 
 
 if __name__ == "__main__":

@@ -25,13 +25,15 @@ class HFPapersCollector(BaseCollector):
                 link = hf_url(link)
 
             desc_el = article.select_one("p, .description, .paper-description")
-            description = desc_el.get_text(strip=True)[:300] if desc_el else ""
+            description = desc_el.get_text(strip=True)[:500] if desc_el else ""
 
             items.append({
                 "title": title,
                 "url": link,
-                "description": description,
+                "summary": description,
+                "abstract": description,
                 "source": "Hugging Face Daily Papers",
+                "type": "paper",
             })
 
         return items[:15]

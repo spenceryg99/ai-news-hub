@@ -52,6 +52,8 @@ class GitHubTrendingCollector(BaseCollector):
                 "language": lang,
                 "stars": stars,
                 "topics": topics,
+                "type": "oss",
+                "source": "GitHub Trending",
             })
 
         return repos

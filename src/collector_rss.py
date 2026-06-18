@@ -19,13 +19,14 @@ class RSSCollector(BaseCollector):
                     published = datetime(*entry.published_parsed[:6]).isoformat()
                 except Exception:
                     pass
-            items.append({
-                "title": entry.get("title", ""),
-                "url": entry.get("link", ""),
-                "description": (entry.get("summary") or entry.get("description", ""))[:400],
-                "published": published,
-                "source": name,
-            })
+                    items.append({
+                        "title": entry.get("title", ""),
+                        "url": entry.get("link", ""),
+                        "description": (entry.get("summary") or entry.get("description", ""))[:400],
+                        "published": published,
+                        "source": name,
+                        "type": "news",
+                    })
         return items
 
     def collect(self) -> list[dict]:

@@ -1,7 +1,7 @@
 import json
 import os
 from datetime import datetime
-from src.config import DATA_DIR
+from src.config import DATA_DIR, today_str
 
 
 class BaseCollector:
@@ -10,15 +10,20 @@ class BaseCollector:
     def collect(self) -> list[dict]:
         raise NotImplementedError
 
+    def _save_path(self, date: str = "") -> str:
+        d = date or today_str()
+        path = os.path.join(DATA_DIR, d)
+        os.makedirs(path, exist_ok=True)
+        return os.path.join(path, f"{self.source_name}.json")
+
     def save(self, data: list[dict]):
-        os.makedirs(DATA_DIR, exist_ok=True)
-        path = os.path.join(DATA_DIR, f"{self.source_name}.json")
+        path = self._save_path()
         with open(path, "w", encoding="utf-8") as f:
             json.dump({"updated_at": datetime.utcnow().isoformat(), "items": data}, f, ensure_ascii=False, indent=2)
         print(f"  [{self.source_name}] saved {len(data)} items")
 
-    def load_cached(self) -> list[dict]:
-        path = os.path.join(DATA_DIR, f"{self.source_name}.json")
+    def load_cached(self, date: str = "") -> list[dict]:
+        path = self._save_path(date)
         if os.path.exists(path):
             with open(path, "r", encoding="utf-8") as f:
                 return json.load(f).get("items", [])

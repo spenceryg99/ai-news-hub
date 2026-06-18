@@ -9,7 +9,7 @@ class ArxivCollector(BaseCollector):
     def collect(self) -> list[dict]:
         client = arxiv.Client(page_size=10, delay_seconds=1, num_retries=1)
 
-        categories = ["cs.AI", "cs.LG", "cs.CL", "cs.CV"]
+        categories = ["cs.AI", "cs.LG", "cs.CL", "cs.CV", "cs.MA", "cs.RO", "cs.NE"]
         seen = set()
         items = []
 
@@ -25,17 +25,29 @@ class ArxivCollector(BaseCollector):
                     if result.entry_id in seen:
                         continue
                     seen.add(result.entry_id)
+
+                    pdf_url = ""
+                    for link in result.links:
+                        if link.title == "pdf":
+                            pdf_url = link.href
+                            break
+
                     items.append({
                         "title": result.title,
                         "url": result.entry_id,
-                        "description": result.summary[:400],
-                        "authors": [a.name for a in result.authors[:5]],
+                        "pdf_url": pdf_url,
+                        "abstract": result.summary,
+                        "summary": result.summary[:500],
+                        "authors": [a.name for a in result.authors],
                         "published": result.published.isoformat() if result.published else "",
-                        "categories": [c for c in result.categories[:3]],
-                        "source": f"arXiv ({cat})",
+                        "updated": result.updated.isoformat() if result.updated else "",
+                        "categories": result.categories,
+                        "comment": getattr(result, "comment", ""),
+                        "source": f"arXiv",
+                        "type": "paper",
                     })
             except Exception as e:
                 print(f"  [arxiv] error fetching category {cat}: {e}")
 
         items.sort(key=lambda x: x.get("published", ""), reverse=True)
-        return items[:15]
+        return items[:20]
