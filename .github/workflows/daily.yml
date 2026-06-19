@@ -1,4 +1,4 @@
-name: Daily AI News Collection
+name: AI News Hub - \u6bcf\u65e5\u91c7\u96c6
 
 on:
   schedule:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 
@@ -22,8 +22,6 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -43,14 +41,14 @@ jobs:
           restore-keys: |
             ai-news-data-
 
-      - name: Run collection and site generation
+      - name: Run collection
         run: python run.py
 
       - name: Upload static files as artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: output/
-          retention-days: 7
+          retention-days: 30
 
       - name: Deploy to GitHub Pages
         id: deployment
