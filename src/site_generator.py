@@ -143,14 +143,44 @@ def render_card(item: dict) -> str:
     )
 
 
-def get_week_boundary(dates: list[str]) -> tuple[str, str]:
-    if not dates:
-        today = datetime.utcnow().strftime("%Y-%m-%d")
-        return today, today
-    today_s = dates[0]
-    today = datetime.strptime(today_s, "%Y-%m-%d")
-    start = (today - timedelta(days=6)).strftime("%Y-%m-%d")
-    return start, today_s
+def generate_archive(all_dates: list[str]):
+    parts = []
+    a = parts.append
+    a("<!DOCTYPE html><html lang='zh-CN'><head>")
+    a("<meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1'>")
+    a(f"<title>{esc(SITE_CONFIG['title'])} - \u5386\u53f2\u5f52\u6863</title>")
+    a(f"<style>{CSS}</style></head><body><div class='container'>")
+    a("<header>")
+    a(f"<h1>\U0001f4c2 \u5386\u53f2\u5f52\u6863</h1>")
+    a(f'<p class="subtitle"><a href="index.html" style="color:var(--accent)">\u2190 \u8fd4\u56de\u672c\u5468\u62a5\u544a</a></p>')
+    a("</header>")
+
+    # Group by week
+    weeks = defaultdict(list)
+    for d in all_dates:
+        dt = datetime.strptime(d, "%Y-%m-%d")
+        week_key = dt.strftime("%Y-W%V")
+        weeks[week_key].append(d)
+
+    for wk in sorted(weeks.keys(), reverse=True):
+        dates = weeks[wk]
+        total = 0
+        for d in dates:
+            data = load_by_date(d)
+            total += sum(len(v) for v in data.values())
+        start, end = dates[-1], dates[0]
+        a(f'<div class="card" style="margin-bottom:8px;cursor:pointer;padding:14px 20px" onclick="location.href=\'index.html\'">')
+        a(f'<div class="card-title">{start} ~ {end} (\u7b2c{wk.split("W")[1]}\u5468)</div>')
+        a(f'<div class="card-desc">\U0001f4ca {total} \u6761\u5185\u5bb9 \u00b7 {len(dates)} \u5929\u6570\u636e</div>')
+        a("</div>")
+
+    a(f'<footer>{esc(SITE_CONFIG["title"])} \u00b7 \u6bcf\u65e5\u81ea\u52a8\u91c7\u96c6</footer>')
+    a("</div></body></html>")
+
+    path = os.path.join(OUTPUT_DIR, "archive.html")
+    with open(path, "w", encoding="utf-8") as f:
+        f.write("\n".join(parts))
+    print(f"[site_generator] Archive generated: {path}")
 
 
 def generate_site():
@@ -167,7 +197,6 @@ def generate_site():
 
     week_start = (datetime.strptime(ref_date, "%Y-%m-%d") - timedelta(days=6)).strftime("%Y-%m-%d")
     week_end = ref_date
-    week_dates = [d for d in all_dates if d >= week_start and d <= week_end]
     week_dates = [d for d in all_dates if d >= week_start and d <= week_end]
 
     # Collect all items and classify by topic
@@ -281,6 +310,9 @@ def generate_site():
     print(f"[site_generator]   Period: {week_start} ~ {week_end}")
     print(f"[site_generator]   Items: {total_unique}")
     print(f"[site_generator]   Topics: {len(top_topics)} active")
+
+    generate_archive(all_dates)
+
     return path
 
 
